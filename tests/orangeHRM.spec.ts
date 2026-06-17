@@ -1,5 +1,30 @@
 import { expect, test } from "../fixture/customsFixture"
 import { TestData } from "../utils/TestData";
+import { createJiraBug } from "../scripts/create-jira-bug";
+
+
+
+test.afterEach(async ({}, testInfo) => {
+
+  if (testInfo.status === "failed") {
+
+    console.log("Creating Jira Bug...");
+
+    const issueKey = await createJiraBug(
+      testInfo.title,
+      testInfo.error?.message || "Unknown Error"
+    );
+
+      console.log(`JIRA Ticket: ${issueKey}`);
+
+    await testInfo.attach("Jira Ticket", {
+      body: Buffer.from(issueKey),
+      contentType: "text/plain",
+    });
+  }
+
+});
+
 
 test("Login", {
     tag: ["@TC_001", "@smoke"]
@@ -7,7 +32,9 @@ test("Login", {
 
     const user = loginData[0]!;
 
-    console.log("browser", user.Browser);
+    console.log("TCID:", user.TCID);
+    console.log("Browser:", user.Browser);
+    console.log("Project:", test.info().project.name);
 
     if (user.Browser.toLowerCase() !== test.info().project.name.toLowerCase()) {
         test.skip();
@@ -21,7 +48,7 @@ test("Login", {
 
     const actualResult = await adminPage.getTitle();
 
-    expect(actualResult).toBe("Dashboard");
+    expect(actualResult).toBe("Dashboard123");
 
 });
 
